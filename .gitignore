@@ -1,16 +1,2 @@
-__pycache__
-# Compiled python modules.
-*.pyc
-.idea
-DA_*.bin
-
-# Setuptools distribution folder.
-/dist/
-
-# Python egg metadata, regenerated from source files by setuptools.
-/*.egg-info
-/*.egg
-
-# Pyinstaller stuff
-build
-dist
+# Created by venv; see https://docs.python.org/3/library/venv.html
+*

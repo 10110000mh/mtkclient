@@ -2,6 +2,7 @@
 # MTK Flash Client (c) B.Kerler 2018-2024.
 # Licensed under GPLv3 License
 import argparse
+import sys
 from mtkclient.Library.mtk_main import Main, metamodes
 
 info = "MTK Flash/Exploit Client Public V2.0.1 (c) B.Kerler 2018-2024"
@@ -1012,7 +1013,7 @@ def main():
     cmd = args.cmd
     if cmd not in cmds:
         parser.print_help()
-        exit(0)
+        sys.exit(1)
 
     mtk = Main(args).run(parser)
 
