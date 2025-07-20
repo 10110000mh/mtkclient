@@ -31,7 +31,7 @@ class Port(metaclass=LogBase):
             self.cdc = SerialClass(portconfig=portconfig, loglevel=loglevel, devclass=10)
             self.cdc.setportname(serialportname)
         else:
-            self.cdc = UsbClass(portconfig=portconfig, loglevel=loglevel, devclass=10)
+            self.cdc = UsbClass(portconfig=portconfig, loglevel=loglevel, devclass=10, libusb0=self.config.libusb0)
         self.usbread = self.cdc.usbread
         self.usbwrite = self.cdc.usbwrite
         self.close = self.cdc.close

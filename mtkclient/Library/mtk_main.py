@@ -48,11 +48,16 @@ class ArgHandler(metaclass=LogBase):
                 config.stock = args.stock
         except AttributeError:
             pass
-
         config.reconnect = True
         try:
             if args.noreconnect is not None:
                 config.reconnect = not args.noreconnect
+        except AttributeError:
+            pass
+        config.libusb0 = False
+        try:
+            if args.libusb0 is not None:
+                config.libusb0 = args.libusb0
         except AttributeError:
             pass
         config.uartloglevel = 2

@@ -111,7 +111,7 @@ class UsbClass(DeviceClass):
                 pass
             del windows_dir
 
-    def __init__(self, loglevel=logging.INFO, portconfig=None, devclass=-1):
+    def __init__(self, loglevel=logging.INFO, portconfig=None, devclass=-1, libusb0 = False):
         super().__init__(loglevel, portconfig, devclass)
         self.load_windows_dll()
         self.connected = False
@@ -129,19 +129,35 @@ class UsbClass(DeviceClass):
         self.EP_OUT = None
         self.is_serial = False
         self.queue = Queue()
+        self.libusb0 = libusb0
         if sys.platform.startswith('freebsd') or sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
             self.backend = usb.backend.libusb1.get_backend(find_library=lambda x: "libusb-1.0.so")
         elif sys.platform.startswith('win32'):
-            if calcsize("P") * 8 == 64:
-                self.backend = usb.backend.libusb1.get_backend(find_library=lambda x: "libusb-1.0.dll")
+            if(self.libusb0):
+                try:
+                    self.info("Using Libusb")
+                    mtk_windows_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "..", "..", "Windows")
+                    libusb0_dll_path = os.path.join(mtk_windows_dir, "libusb0.dll")
+                    if not os.path.exists(libusb0_dll_path):
+                        raise FileNotFoundError(f"The required libusb0.dll was not found at {libusb0_dll_path}")
+                    self.backend = usb.backend.libusb0.get_backend(find_library=lambda x: libusb0_dll_path)
+                    if not self.backend:
+                        raise RuntimeError("Failed to get libusb0 backend even with a direct path.")
+                except Exception as e:
+                    self.error(f"FATAL: Could not load libusb0.dll: {e}")
+                    self.error("Falling back to default libusb1 backend. This may fail if you are using libusb-win32 filter drivers.")
+                    self.backend = usb.backend.libusb1.get_backend(find_library=lambda x: "libusb-1.0.dll")
             else:
-                self.backend = usb.backend.libusb1.get_backend(find_library=lambda x: "libusb32-1.0.dll")
-        if self.backend is not None:
-            try:
-                self.backend.lib.libusb_set_option.argtypes = [c_void_p, c_int]
-                self.backend.lib.libusb_set_option(self.backend.ctx, 1)
-            except Exception:
-                self.backend = None
+                if calcsize("P") * 8 == 64:
+                    self.backend = usb.backend.libusb1.get_backend(find_library=lambda x: "libusb-1.0.dll")
+                else:
+                    self.backend = usb.backend.libusb1.get_backend(find_library=lambda x: "libusb32-1.0.dll")
+                if self.backend is not None:
+                    try:
+                        self.backend.lib.libusb_set_option.argtypes = [c_void_p, c_int]
+                        self.backend.lib.libusb_set_option(self.backend.ctx, 1)
+                    except Exception:
+                        self.backend = None
 
     def set_fast_mode(self, enabled):
         self.fast = bool(enabled)
@@ -286,8 +302,8 @@ class UsbClass(DeviceClass):
         self.debug(f"Linecoding set, {wlen}b sent")
 
     def flush(self):
-        return
-
+        return 
+            
     def connect(self, ep_in=-1, ep_out=-1):
         if self.connected:
             self.close()
@@ -313,6 +329,8 @@ class UsbClass(DeviceClass):
             return False
 
         try:
+            if(self.libusb0):
+                 self.device.set_configuration()
             self.configuration = self.device.get_active_configuration()
         except usb.core.USBError as e:
             if e.strerror == "Configuration not set":

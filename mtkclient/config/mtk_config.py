@@ -78,6 +78,7 @@ class MtkConfig(metaclass=LogBase):
         else:
             self.__logger.setLevel(logging.INFO)
         self.reconnect = True
+        self.libusb0 = False
         self.uartloglevel = 2
         self.hwver = 0xca00
         self.swver = 0
