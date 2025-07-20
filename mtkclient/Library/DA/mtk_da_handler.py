@@ -128,7 +128,7 @@ class DaHandler(metaclass=LogBase):
                 if not hassecurity:
                     mtk.daloader.patch = True
 
-                if not self.mtk.config.stock:
+                if not self.mtk.config.stock and mtk.config.preloader is None:
                     mtk = mtk.bypass_security()  # Needed for dumping preloader
                 else:
                     self.info("Using supplied preloader. Skipping exploitation!")
